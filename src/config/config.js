@@ -9,27 +9,27 @@ const config = {
     app: {
         name: 'Astra - Conversational AI',
         version: '1.0.0',
-        environment: process.env.NODE_ENV || 'development',
-        port: parseInt(process.env.PORT) || 3000,
+        environment: process.env.NODE_ENV,
+        port: parseInt(process.env.PORT),
     },
 
     llm: {
-        provider: process.env.LLM_PROVIDER || 'gemini', // gemini, openai, anthropic
+        provider: process.env.LLM_PROVIDER, // gemini, openai, anthropic
         apiKey: process.env.LLM_API_KEY,
-        model: process.env.LLM_MODEL || 'gemini-2.5-flash', // or gemini-flash for cheaper/faster responses
-        temperature: parseFloat(process.env.TEMPERATURE) || 0.7,
-        maxTokens: parseInt(process.env.MAX_TOKENS) || 1024,
+        model: process.env.LLM_MODEL, // or gemini-flash for cheaper/faster responses
+        temperature: parseFloat(process.env.TEMPERATURE),
+        maxTokens: parseInt(process.env.MAX_TOKENS),
     },
 
     memory: {
-        shortTermSize: parseInt(process.env.SHORT_TERM_SIZE) || 10, // Number of recent messages to keep in session
-        longTermRetentionDays: parseInt(process.env.LONG_TERM_RETENTION_DAYS) || 30,
-        episodicSummaryThreshold: parseInt(process.env.EPISODIC_SUMMARY_THRESHOLD) || 5, // Messages before summary
+        shortTermSize: parseInt(process.env.SHORT_TERM_SIZE) , // Number of recent messages to keep in session
+        longTermRetentionDays: parseInt(process.env.LONG_TERM_RETENTION_DAYS),
+        episodicSummaryThreshold: parseInt(process.env.EPISODIC_SUMMARY_THRESHOLD), // Messages before summary
     },
 
     redis: {
-        host: process.env.REDIS_HOST || 'redis',
-        port: parseInt(process.env.REDIS_PORT) || 6379,
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT),
         password: process.env.REDIS_PASSWORD,
         sessionExpiry: parseInt(process.env.REDIS_SESSION_EXPIRY) || 3600, // 1 hour
     },
@@ -48,7 +48,7 @@ const config = {
             max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // Limit each IP to 100 requests per windowMs
         },
         cors: {
-            origin: process.env.CORS_ORIGIN || ['http://localhost:5173'],
+            origin: process.env.CORS_ORIGIN || ['https://conversational-ai-6m4r.onrender.com/'],
             credentials: process.env.CORS_CREDENTIALS === 'true' || true,
         },
     },
