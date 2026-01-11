@@ -1,0 +1,8 @@
+.env.production
+.env.local
+*.log
+logs/
+node_modules/
+.DS_Store
+coverage/
+.nyc_output/
