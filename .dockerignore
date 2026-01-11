@@ -18,3 +18,4 @@ docker-compose.yml
 coverage
 dist
 build
+frontend/dist
