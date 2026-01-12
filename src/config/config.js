@@ -48,7 +48,7 @@ const config = {
             max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // Limit each IP to 100 requests per windowMs
         },
         cors: {
-            origin: 'https://conversational-ai-6m4r.onrender.com/',
+            origin: 'https://conversational-ai-6m4r.onrender.com',
             credentials: process.env.CORS_CREDENTIALS === 'true' || true,
         },
     },
