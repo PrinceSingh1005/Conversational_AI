@@ -121,22 +121,25 @@ const App = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
-            <nav className="bg-white border-b shadow-sm">
-                <div className="max-w-4xl mx-auto px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/40 to-purple-50/60 text-slate-800">
+            <nav className="sticky top-0 z-30 backdrop-blur-md bg-white/70 border-b border-slate-200/60 shadow-sm">
+                <div className="max-w-5xl mx-auto px-6">
                     <div className="flex h-16 items-center justify-between">
-                        <h1 className="text-xl font-bold text-gray-900">Astra</h1>
+                        <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+                            Astra <span className="text-indigo-600">•</span>
+                        </h1>
 
                         <div className="flex space-x-2">
                             {['chat', 'history', 'persona'].map(page => (
                                 <button
                                     key={page}
                                     onClick={() => setCurrentPage(page)}
-                                    className={`px-3 py-2 rounded-md text-sm font-medium transition
-                                        ${currentPage === page
-                                            ? 'bg-indigo-100 text-indigo-700'
-                                            : 'text-gray-500 hover:text-gray-700'
+                                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200
+  ${currentPage === page
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                                         }`}
+
                                 >
                                     {page.charAt(0).toUpperCase() + page.slice(1)}
                                 </button>
@@ -146,15 +149,17 @@ const App = () => {
                 </div>
             </nav>
 
-            <main className="max-w-4xl mx-auto px-4 py-8">
+            <main className="max-w-5xl mx-auto px-6 py-10">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentPage}
-                        initial={{ opacity: 0, y: 12 }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -12 }}
-                        transition={{ duration: 0.18 }}
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                        className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg shadow-indigo-100/50 border border-slate-200/60"
                     >
+
                         {renderPage()}
                     </motion.div>
                 </AnimatePresence>
