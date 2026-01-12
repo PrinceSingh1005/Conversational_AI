@@ -1,30 +1,50 @@
-import React from 'react';
-
-const HistoryPage = () => {
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
+const HistoryPage = ({userId}) => {
     // Mock history data
-    const mockHistory = [
-        {
-            id: 1,
-            date: '2024-01-10',
-            summary: 'Discussed interests in anime and backend systems',
-            emotion: 'positive',
-            duration: '12 min'
-        },
-        {
-            id: 2,
-            date: '2024-01-09',
-            summary: 'Talked about emotional wellbeing and stress management',
-            emotion: 'empathetic',
-            duration: '8 min'
-        },
-        {
-            id: 3,
-            date: '2024-01-08',
-            summary: 'Shared thoughts on technology and personal growth',
-            emotion: 'neutral',
-            duration: '15 min'
+    // const mockHistory = [
+    //     {
+    //         id: 1,
+    //         date: '2024-01-10',
+    //         summary: 'Discussed interests in anime and backend systems',
+    //         emotion: 'positive',
+    //         duration: '12 min'
+    //     },
+    //     {
+    //         id: 2,
+    //         date: '2024-01-09',
+    //         summary: 'Talked about emotional wellbeing and stress management',
+    //         emotion: 'empathetic',
+    //         duration: '8 min'
+    //     },
+    //     {
+    //         id: 3,
+    //         date: '2024-01-08',
+    //         summary: 'Shared thoughts on technology and personal growth',
+    //         emotion: 'neutral',
+    //         duration: '15 min'
+    //     }
+    // ];
+
+    const [history, setHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() =>{
+        async function fetchHistory(){
+            try{
+                const data = await api.getHistory(userId);
+                setHistory(data);
+            }catch(error){
+                console.error('Error fetching history:', error);
+            }
+            finally{
+                setLoading(false);
+            }
         }
-    ];
+        fetchHistory();
+    },[userId])
+    if (loading) return <div>Loading...</div>;
+    if (history.length === 0) return <div>No conversation history found.</div>;
 
     const getEmotionColor = (emotion) => {
         switch (emotion) {
@@ -47,7 +67,7 @@ const HistoryPage = () => {
             </div>
 
             <div className="space-y-4">
-                {mockHistory.map((item) => (
+                {history.map((item) => (
                     <div
                         key={item.id}
                         className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"

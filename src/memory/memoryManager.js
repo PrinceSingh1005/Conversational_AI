@@ -99,7 +99,11 @@ class MemoryManager {
             const key = `shortterm:${userId}:${sessionId}`;
 
             for (const message of messages) {
-                await this.redisClient.lPush(key, JSON.stringify(message));
+                const timestampedMessage = {
+                ...message,
+                timestamp: new Date().toISOString()
+            };
+                await this.redisClient.lPush(key, JSON.stringify(timestampedMessage));
             }
 
             // Trim to keep only the most recent messages
@@ -194,6 +198,31 @@ class MemoryManager {
      * @param {number} limit - Number of episodes to retrieve
      * @returns {array} - Array of episodic memories
      */
+
+    async createEpisodicMemoryFromSession(messages) {
+    const userMessages = messages.filter(m => m.role === 'user');
+    const botMessages = messages.filter(m => m.role === 'model');
+
+    // Assume emotionalContexts are derived (for now, simplify; you can use LLM later)
+    const emotionalContexts = ['positive', 'empathetic', 'neutral']; // Placeholder; expand if emotions are stored
+    const primaryEmotion = emotionalContexts.length > 0 ? this.mostFrequent(emotionalContexts) : 'neutral';
+
+    // Calculate date (first message) and duration (last - first in minutes)
+    if (messages.length === 0) return null;
+    const firstTimestamp = new Date(messages[0].timestamp);
+    const lastTimestamp = new Date(messages[messages.length - 1].timestamp);
+    const durationMin = Math.round((lastTimestamp - firstTimestamp) / (1000 * 60));
+    const date = firstTimestamp.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    return {
+        id: uuidv4(),
+        date,
+        summary: `Discussed topics based on ${userMessages.length} user inputs and ${botMessages.length} responses`,
+        emotion: primaryEmotion,
+        duration: `${durationMin} min`
+    };
+}
+
     async getEpisodicMemory(userId, limit = 10) {
         try {
             const query = `
@@ -397,7 +426,7 @@ class MemoryManager {
      * @returns {object} - Extracted facts
      */
     async extractFactsFromMessage(message) {
-    const prompt = `
+        const prompt = `
 Extract ONLY concrete personal facts the user explicitly stated about themselves.
 Return JSON: { "name": "...", "interests": [...], "location": "...", ... } or empty {} if none.
 
@@ -413,40 +442,70 @@ Message: "${message}"
 Respond with JSON only, no markdown or code blocks:
 `;
 
+        try {
+            if (!this.llmStrategy) {
+                console.warn('LLMStrategy not available for fact extraction');
+                return {};
+            }
+
+            const text = await this.llmStrategy.generateContent(prompt, [], "");
+
+            // Clean markdown code fences
+            let cleanedText = text.trim();
+
+            // Remove opening ```json
+            if (cleanedText.startsWith('```json')) {
+                cleanedText = cleanedText.substring(7);
+            } else if (cleanedText.startsWith('```')) {
+                cleanedText = cleanedText.substring(3);
+            }
+
+            // Remove closing ```
+            if (cleanedText.endsWith('```')) {
+                cleanedText = cleanedText.slice(0, -3);
+            }
+
+            cleanedText = cleanedText.trim();
+
+            // Parse safely
+            return JSON.parse(cleanedText);
+
+        } catch (error) {
+            console.error('Fact extraction failed:', error);
+            console.error('Raw LLM output was:', text); // Helpful for debugging
+            return {}; // Safe fallback
+        }
+    }
+
+    async getUserSessions(userId) {
     try {
-        if (!this.llmStrategy) {
-            console.warn('LLMStrategy not available for fact extraction');
-            return {};
+        const key = `sessions:${userId}`;
+        const sessions = await this.redisClient.sMembers(key);
+        
+        console.log(`[SESSIONS] For user ${userId} → key: ${key} → found: ${sessions?.length || 0} sessions`);
+        if (sessions?.length) {
+            console.log('[SESSIONS] List:', sessions);
         }
-
-        const text = await this.llmStrategy.generateContent(prompt, [], "");
-
-        // Clean markdown code fences
-        let cleanedText = text.trim();
-
-        // Remove opening ```json
-        if (cleanedText.startsWith('```json')) {
-            cleanedText = cleanedText.substring(7);
-        } else if (cleanedText.startsWith('```')) {
-            cleanedText = cleanedText.substring(3);
-        }
-
-        // Remove closing ```
-        if (cleanedText.endsWith('```')) {
-            cleanedText = cleanedText.slice(0, -3);
-        }
-
-        cleanedText = cleanedText.trim();
-
-        // Parse safely
-        return JSON.parse(cleanedText);
-
+        
+        return sessions || [];
     } catch (error) {
-        console.error('Fact extraction failed:', error);
-        console.error('Raw LLM output was:', text); // Helpful for debugging
-        return {}; // Safe fallback
+        console.error('[SESSIONS] Error fetching user sessions:', error);
+        return [];
     }
 }
+
+    async addSessionToUser(userId, sessionId) {
+        const key = `sessions:${userId}`;
+        await this.redisClient.sAdd(key, sessionId);
+        await this.redisClient.expire(key, 60 * 60 * 24 * 90); // 30 days
+    console.log(`[MEMORY] Added session ${sessionId} to user ${userId}'s set`);
+    }
+
+    async getUserSessions(userId) {
+        const key = `sessions:${userId}`;
+        return await this.redisClient.sMembers(key) || [];
+    }
+
 }
 
 module.exports = MemoryManager;

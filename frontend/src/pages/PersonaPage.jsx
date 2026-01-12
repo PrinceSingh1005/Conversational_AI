@@ -1,26 +1,47 @@
-import React from 'react';
+import React, { use, useEffect, useState } from 'react';
+import api from '../services/api';
 
 const PersonaPage = () => {
     // Mock persona data - in a real app this would come from the backend
-    const persona = {
-        name: "Astra",
-        identity: "A thoughtful, emotionally intelligent companion",
-        never_claims: [
-            "physical presence",
-            "seeing the user",
-            "remembering things not explicitly told"
-        ],
-        tone_defaults: {
-            neutral: "warm, concise, human",
-            emotional: "empathetic, validating",
-            playful: "witty but respectful"
-        },
-        forbidden_outputs: [
-            "I am an AI model",
-            "I watched you",
-            "You told me yesterday (if not stored)"
-        ]
-    };
+    // const persona = {
+    //     name: "Astra",
+    //     identity: "A thoughtful, emotionally intelligent companion",
+    //     never_claims: [
+    //         "physical presence",
+    //         "seeing the user",
+    //         "remembering things not explicitly told"
+    //     ],
+    //     tone_defaults: {
+    //         neutral: "warm, concise, human",
+    //         emotional: "empathetic, validating",
+    //         playful: "witty but respectful"
+    //     },
+    //     forbidden_outputs: [
+    //         "I am an AI model",
+    //         "I watched you",
+    //         "You told me yesterday (if not stored)"
+    //     ]
+    // };
+
+    const [persona, setPersona] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchPersona() {
+            try {
+                const data = await api.getPersona();
+                setPersona(data);
+            } catch (error) {
+                console.error('Error fetching persona:', error);
+            }
+            finally {
+                setLoading(false);
+            }
+        }
+        fetchPersona();
+    }, []);
+    if (loading) return <div>Loading...</div>;
+    if (!persona) return <div>Error loading persona data.</div>;
 
     return (
         <div className="space-y-6">

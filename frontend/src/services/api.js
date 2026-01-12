@@ -32,6 +32,28 @@ class ApiService {
         }
     }
 
+    async getPersona() {
+    try {
+        const response = await fetch(`${this.baseURL}/persona`);
+        if (!response.ok) throw new Error('Failed to fetch persona');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching persona:', error);
+        throw error;
+    }
+}
+
+async getHistory(userId) {
+    try {
+        const response = await fetch(`${this.baseURL}/history/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch history');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        throw error;
+    }
+}
+
     async getHealth() {
         try {
             const response = await fetch(`${this.baseURL}/health`);

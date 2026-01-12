@@ -29,12 +29,12 @@ const App = () => {
     });
 
     const [sessionId, setSessionId] = useState(() => {
-        const stored = sessionStorage.getItem('astra_session_id');
-        if (stored) return stored;
+        const lastUsed = localStorage.getItem('astra_last_session_id');
+        if (lastUsed) return lastUsed;
 
-        const id = `session_${crypto.randomUUID()}`;
-        sessionStorage.setItem('astra_session_id', id);
-        return id;
+        const newId = `sess_${userId}_${Date.now()}`;
+        localStorage.setItem('astra_last_session_id', newId);
+        return newId;
     });
 
     const messagesEndRef = useRef(null);
@@ -71,7 +71,7 @@ const App = () => {
 
             if (response?.sessionId && response.sessionId !== sessionId) {
                 setSessionId(response.sessionId);
-                sessionStorage.setItem('astra_session_id', response.sessionId);
+                localStorage.setItem('astra_session_id', response.sessionId);
             }
 
             if (!response?.success) {
@@ -104,8 +104,52 @@ const App = () => {
         }
     }, [inputText, isTyping, userId, sessionId]);
 
+    // Add this useEffect to load messages when sessionId changes / on mount
+    useEffect(() => {
+        async function loadConversation() {
+            if (!sessionId) return;
+
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/conversation/${sessionId}`
+                );
+                const data = await response.json();
+
+                if (data.success && data.messages?.length > 0) {
+                    // Convert backend format to frontend format
+                    const loadedMessages = data.messages.map(msg => ({
+                        id: crypto.randomUUID(),
+                        text: msg.text,
+                        sender: msg.role === 'user' ? 'user' : 'bot',
+                        timestamp: new Date(msg.timestamp || Date.now()),
+                        emotion: msg.emotion || 'neutral'
+                    }));
+
+                    // Add welcome message only if conversation is empty
+                    if (loadedMessages.length === 0) {
+                        setMessages([
+                            {
+                                id: crypto.randomUUID(),
+                                text: "Hello! I'm Astra, your thoughtful companion. How can I help you today?",
+                                sender: 'bot',
+                                timestamp: new Date(),
+                                emotion: 'neutral'
+                            }
+                        ]);
+                    } else {
+                        setMessages(loadedMessages);
+                    }
+                }
+            } catch (err) {
+                console.error("Couldn't load previous messages", err);
+            }
+        }
+
+        loadConversation();
+    }, [sessionId]);
+
     const renderPage = () => {
-        if (currentPage === 'history') return <HistoryPage />;
+        if (currentPage === 'history') return <HistoryPage userId={userId} />;
         if (currentPage === 'persona') return <PersonaPage />;
 
         return (
